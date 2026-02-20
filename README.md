@@ -22,9 +22,12 @@ You must have Hugging Face access configured for gated models.
 
 ## Datasets
 
-- ToxicChat: `lmsys/toxic-chat` (`toxicchat1123`)
-- XSTest: `natolambert/xstest-v2-copy`
-- AdvBench: `walledai/AdvBench`
+- ToxicChat: `lmsys/toxic-chat` (`toxicchat1123`)  
+  https://huggingface.co/datasets/lmsys/toxic-chat
+- XSTest: `natolambert/xstest-v2-copy`  
+  https://huggingface.co/datasets/natolambert/xstest-v2-copy
+- AdvBench: `walledai/AdvBench`  
+  https://huggingface.co/datasets/walledai/AdvBench
 
 ## Quick Reproduction (Baseline Pipeline)
 
