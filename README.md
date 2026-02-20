@@ -64,6 +64,23 @@ python baselines/safe_decoding/eval.py \
   --save-metrics-json
 ```
 
+Measure final latency per method (`greedy`, `top_p`, `top_k`):
+
+```bash
+python baselines/safe_decoding/latency.py \
+  --data_name xstest \
+  --model_name meta-llama/Llama-2-7b-chat-hf \
+  --device cuda:0 \
+  --num_samples 100 \
+  --warmup_samples 5 \
+  --output_json latency_summary.json \
+  --output_csv latency_per_prompt.csv
+```
+
+Final latency is reported in:
+- `latency_summary.json` (average, p50, p95, tokens/sec per method)
+- `latency_per_prompt.csv` (raw per-prompt timings)
+
 Run SFT training:
 
 ```bash
@@ -89,4 +106,3 @@ python sft/finetune.py \
 - Baseline scripts expect a `prompt` field in loaded datasets.
 - `baselines/safe_decoding/eval.py` expects a `ground_truth` column in `<dataset>.csv`.
 - `sft/finetune.py` is now CLI-configurable and no longer depends on external undefined preprocessors.
-
