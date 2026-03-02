@@ -25,34 +25,40 @@ HF_DATASET_SPECS = {
     "advbench": {
         "path": "walledai/AdvBench",
         "split": "train",
-        "columns": ["prompt"],
+        "prompt_column": "prompt",
         "label_fn": lambda df: [1] * len(df),
     },
     "toxicchat": {
         "path": "lmsys/toxic-chat",
         "name": "toxicchat1123",
         "split": "test",
-        "columns": ["user_input", "toxicity"],
+        "prompt_column": "user_input",
         "label_fn": lambda df: df["toxicity"].eq(1).astype(int).tolist(),
     },
     "xstest": {
         "path": "natolambert/xstest-v2-copy",
         "split": "prompts",
-        "columns": ["prompt", "type"],
+        "prompt_column": "prompt",
         "label_fn": lambda df: df["type"].fillna("").str.contains("contrast", case=False).astype(int).tolist(),
     },
 }
 
 
-def load_input_dataframe(dataset):
+def load_input_dataframe(dataset, max_samples=None):
     if dataset == "security":
-        return pd.read_csv("security_data.csv")
+        df = pd.read_csv("security_data.csv")
+        if max_samples is not None:
+            df = df.head(max_samples).copy()
+        return df
     if dataset not in HF_DATASET_SPECS:
         raise ValueError(f"Data not defined: {dataset}")
 
     spec = HF_DATASET_SPECS[dataset]
     ds = load_dataset(spec["path"], spec.get("name"), split=spec["split"])
-    return ds.to_pandas()
+    df = ds.to_pandas()
+    if max_samples is not None:
+        df = df.head(max_samples).copy()
+    return df
 
 
 def prepare_dataset_columns(dataset, df):
@@ -62,7 +68,8 @@ def prepare_dataset_columns(dataset, df):
         raise ValueError(f"Data not defined: {dataset}")
 
     spec = HF_DATASET_SPECS[dataset]
-    return df[spec["columns"]], spec["label_fn"](df)
+    columns = df[[spec["prompt_column"]]].rename(columns={spec["prompt_column"]: "prompt"})
+    return columns, spec["label_fn"](df)
 
 
 def parse_args():
@@ -82,6 +89,12 @@ def parse_args():
         "--output-dir",
         default="outputs/detection",
         help="Directory where per-run CSV and metrics JSON files will be written.",
+    )
+    parser.add_argument(
+        "--max-samples",
+        type=int,
+        default=None,
+        help="Optional cap on the number of dataset rows to score.",
     )
     return parser.parse_args()
 
@@ -193,7 +206,7 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
 
 def main():
     args = parse_args()
-    df = load_input_dataframe(args.dataset)
+    df = load_input_dataframe(args.dataset, max_samples=args.max_samples)
     model, tokenizer = load_model(args.model_id)
 
     output_dir = Path(args.output_dir)
@@ -206,6 +219,7 @@ def main():
     metrics = {
         "dataset": args.dataset,
         "model_id": args.model_id,
+        "max_samples": args.max_samples,
         "outputs": {},
         "latency": {},
     }

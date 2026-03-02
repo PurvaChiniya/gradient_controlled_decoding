@@ -18,10 +18,14 @@ Run the detection model with:
 Optional arguments:
 - `--model-id` to override the default model `meta-llama/Llama-2-7b-chat-hf`
 - `--output-dir` to choose where run artifacts are saved
+- `--max-samples` to cap the number of dataset rows scored
 
 The script saves one CSV and one metrics JSON per dataset/model configuration, for example:
 - `outputs/detection/advbench__meta-llama-llama-2-7b-chat-hf__scores.csv`
 - `outputs/detection/advbench__meta-llama-llama-2-7b-chat-hf__metrics.json`
+
+Example for running `toxicchat` on only 500 samples:
+`python detection.py --dataset toxicchat --max-samples 500`
 
 The metrics JSON also includes scoring latency for the dataset. This latency excludes:
 - model loading

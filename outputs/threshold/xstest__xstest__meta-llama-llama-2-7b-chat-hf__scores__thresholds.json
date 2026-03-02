@@ -1,0 +1,20 @@
+{
+  "dataset": "xstest",
+  "scores_csv": "outputs/detection/xstest__meta-llama-llama-2-7b-chat-hf__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.4692858247247773,
+      "max_f1": 0.9191919191919193,
+      "precision_at_best": 0.9285714285714286,
+      "recall_at_best": 0.91,
+      "auprc": 0.9314898146961625
+    },
+    "sorry": {
+      "best_threshold": 0.4995723318161124,
+      "max_f1": 0.861904761904762,
+      "precision_at_best": 0.8227272727272728,
+      "recall_at_best": 0.905,
+      "auprc": 0.8737641935693928
+    }
+  }
+}
