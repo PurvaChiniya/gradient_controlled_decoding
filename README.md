@@ -19,6 +19,7 @@ pip install -r requirements.txt
 
 By default, scripts use `meta-llama/Llama-2-7b-chat-hf`.
 You must have Hugging Face access configured for gated models.
+Run `huggingface-cli login` before using the model or downloading the public datasets used by `gradient_controlled_decoding/detection.py`.
 
 ## Datasets
 
@@ -28,6 +29,8 @@ You must have Hugging Face access configured for gated models.
   https://huggingface.co/datasets/natolambert/xstest-v2-copy
 - AdvBench: `walledai/AdvBench`  
   https://huggingface.co/datasets/walledai/AdvBench
+
+For `gradient_controlled_decoding/detection.py`, `advbench`, `toxicchat`, and `xstest` are loaded directly from these Hugging Face datasets. The `security` dataset remains local/internal and is still read from `security_data.csv`.
 
 ## Quick Reproduction (Baseline Pipeline)
 
@@ -109,3 +112,6 @@ python sft/finetune.py \
 - Baseline scripts expect a `prompt` field in loaded datasets.
 - `baselines/safe_decoding/eval.py` expects a `ground_truth` column in `<dataset>.csv`.
 - `sft/finetune.py` is now CLI-configurable and no longer depends on external undefined preprocessors.
+
+
+All experiemnts run on V100 Tesla gpus. 

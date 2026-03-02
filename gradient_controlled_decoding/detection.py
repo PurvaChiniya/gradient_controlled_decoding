@@ -1,3 +1,4 @@
+import argparse
 import copy
 import pickle
 import torch
@@ -5,6 +6,8 @@ import numpy as np
 import pandas as pd
 import os
 import json
+import re
+import time
 import torch.nn.functional as F
 import seaborn as sns
 from tqdm import tqdm
@@ -13,26 +16,110 @@ from datasets import load_dataset
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_curve, auc
 import itertools
+from pathlib import Path
 from find_critical_parameters import find_critical_para, load_model
 
-def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response, dataset):
-    
-    if dataset == "advbench":
-        columns = df[['prompt']]
-        label_all = [1] * len(df)
-    elif dataset == "toxicchat":
-        columns = df[['user_input', 'toxicity']]
-        label_all = [1 if x == 1 else 0 for x in df['toxicity']]
-    elif dataset == "xstest":
-        columns = df[['prompt', 'type']]
-        label_all = [1 if "contrast" in row['type'] else 0 for _, row in df.iterrows()]
-    elif dataset == "security":
-        columns = df[['prompt']]
-        label_all = [1] * len(df)
-    else:
-        raise ValueError("Data not defined")
-        
-    model, tokenizer = load_model(model_id, device='cuda:6')
+DEFAULT_MODEL_ID = "meta-llama/Llama-2-7b-chat-hf"
+
+HF_DATASET_SPECS = {
+    "advbench": {
+        "path": "walledai/AdvBench",
+        "split": "train",
+        "columns": ["prompt"],
+        "label_fn": lambda df: [1] * len(df),
+    },
+    "toxicchat": {
+        "path": "lmsys/toxic-chat",
+        "name": "toxicchat1123",
+        "split": "test",
+        "columns": ["user_input", "toxicity"],
+        "label_fn": lambda df: df["toxicity"].eq(1).astype(int).tolist(),
+    },
+    "xstest": {
+        "path": "natolambert/xstest-v2-copy",
+        "split": "prompts",
+        "columns": ["prompt", "type"],
+        "label_fn": lambda df: df["type"].fillna("").str.contains("contrast", case=False).astype(int).tolist(),
+    },
+}
+
+
+def load_input_dataframe(dataset):
+    if dataset == "security":
+        return pd.read_csv("security_data.csv")
+    if dataset not in HF_DATASET_SPECS:
+        raise ValueError(f"Data not defined: {dataset}")
+
+    spec = HF_DATASET_SPECS[dataset]
+    ds = load_dataset(spec["path"], spec.get("name"), split=spec["split"])
+    return ds.to_pandas()
+
+
+def prepare_dataset_columns(dataset, df):
+    if dataset == "security":
+        return df[["prompt"]], [1] * len(df)
+    if dataset not in HF_DATASET_SPECS:
+        raise ValueError(f"Data not defined: {dataset}")
+
+    spec = HF_DATASET_SPECS[dataset]
+    return df[spec["columns"]], spec["label_fn"](df)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run gradient-based detection for a selected dataset and model.")
+    parser.add_argument(
+        "--dataset",
+        choices=sorted(list(HF_DATASET_SPECS.keys()) + ["security"]),
+        required=True,
+        help="Dataset to evaluate.",
+    )
+    parser.add_argument(
+        "--model-id",
+        default=DEFAULT_MODEL_ID,
+        help=f"Hugging Face model ID to load. Defaults to {DEFAULT_MODEL_ID}.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="outputs/detection",
+        help="Directory where per-run CSV and metrics JSON files will be written.",
+    )
+    return parser.parse_args()
+
+
+def slugify(value):
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", value).strip("-").lower()
+
+
+def synchronize_if_needed():
+    if torch.cuda.is_available():
+        torch.cuda.synchronize()
+
+
+def summarize_latency(latency_seconds):
+    latency_ms = np.array(latency_seconds, dtype=float) * 1000.0
+    if latency_ms.size == 0:
+        return {
+            "num_samples": 0,
+            "total_seconds": 0.0,
+            "mean_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+        }
+
+    return {
+        "num_samples": int(latency_ms.size),
+        "total_seconds": float(np.sum(latency_ms) / 1000.0),
+        "mean_ms": float(np.mean(latency_ms)),
+        "p50_ms": float(np.percentile(latency_ms, 50)),
+        "p95_ms": float(np.percentile(latency_ms, 95)),
+    }
+
+
+def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response, dataset, model=None, tokenizer=None):
+    columns, label_all = prepare_dataset_columns(dataset, df)
+
+    if model is None or tokenizer is None:
+        model, tokenizer = load_model(model_id)
     sep_token, sep_token_id = tokenizer.unk_token, tokenizer.unk_token_id
     prompt = (
         f'<s>[INST] <<SYS>> {{system_prompt}} <</SYS>> {{content}} [/INST]' + 
@@ -50,7 +137,10 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
         return {'text': txt}
 
     cos_all = []
+    latency_seconds = []
     for index, row in tqdm(columns.iterrows(), total=len(columns), desc="Processing rows"):
+        synchronize_if_needed()
+        start_time = time.perf_counter()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         basic_sample = {"source": row["prompt"], "target": response}
         d = apply_prompt_template(basic_sample)
@@ -77,6 +167,8 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
                 cos.extend(row_cos[ref_row > 1].cpu().tolist())
                 cos.extend(col_cos[ref_col > 1].cpu().tolist())
 
+        synchronize_if_needed()
+        latency_seconds.append(time.perf_counter() - start_time)
         cos_all.append(cos)
         
     cos_all = [sum(feature) / len(feature) for feature in cos_all]
@@ -96,26 +188,67 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
     print("F1 Score:", f1)
     print("AUPRC:", auprc)
     
-    return auprc, f1, predicted_labels, cos_all
+    return auprc, f1, predicted_labels, cos_all, latency_seconds
+
+
+def main():
+    args = parse_args()
+    df = load_input_dataframe(args.dataset)
+    model, tokenizer = load_model(args.model_id)
+
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    config_slug = f"{args.dataset}__{slugify(args.model_id)}"
+    output_csv = output_dir / f"{config_slug}__scores.csv"
+    output_metrics = output_dir / f"{config_slug}__metrics.json"
+
+    metrics = {
+        "dataset": args.dataset,
+        "model_id": args.model_id,
+        "outputs": {},
+        "latency": {},
+    }
+
+    scoring_latency_seconds = []
+    for response in ["Sure", "Sorry"]:
+        gradient_norms_compare, minus_row_cos, minus_col_cos = find_critical_para(
+            args.model_id,
+            response=response,
+            dataset=args.dataset,
+            model=model,
+            tokenizer=tokenizer,
+        )
+        auprc, f1, predicted_labels, cos_all, latency_seconds = cos_sim(
+            args.model_id,
+            df,
+            gradient_norms_compare,
+            minus_row_cos,
+            minus_col_cos,
+            response,
+            args.dataset,
+            model=model,
+            tokenizer=tokenizer,
+        )
+        response_key = response.lower()
+        df[response_key] = cos_all
+        df[f"predicted_label_{response_key}"] = predicted_labels
+        metrics["outputs"][response_key] = {
+            "auprc": auprc,
+            "f1": f1,
+        }
+        metrics["latency"][response_key] = summarize_latency(latency_seconds)
+        scoring_latency_seconds.extend(latency_seconds)
+
+    metrics["latency"]["scoring_total"] = summarize_latency(scoring_latency_seconds)
+
+    df.to_csv(output_csv, index=False)
+    with output_metrics.open("w", encoding="utf-8") as f:
+        json.dump(metrics, f, indent=2)
+
+    print(f"Saved scores to {output_csv}")
+    print(f"Saved metrics to {output_metrics}")
+
 
 if __name__ == "__main__":
-    dataset = "your_dataset_here"  # Define your dataset here
-    if dataset == "advbench":
-        ds = load_dataset("walledai/AdvBench")
-        df = ds['train'].to_pandas()
-    elif dataset == "toxicchat":
-        ds = load_dataset("lmsys/toxic-chat", 'toxicchat1123')
-        df = ds['test'].to_pandas()
-    elif dataset == "xstest":
-        ds = load_dataset("natolambert/xstest-v2-copy")
-        df = ds['prompts'].to_pandas()
-    elif dataset == "security":
-        df = pd.read_csv("security_data.csv")
-    
-    for model_id in ['meta-llama/Llama-2-7b-chat-hf']:
-        for response in ["Sure", "Sorry"]:
-            gradient_norms_compare, minus_row_cos, minus_col_cos = find_critical_para(model_id, response)
-            auprc, f1, predicted_labels, cos_all = cos_sim(model_id, df, gradient_norms_compare, minus_row_cos, minus_col_cos, response, dataset)
-            df[response] = cos_all
-        
-    df.to_csv(f"{dataset}.csv")
+    main()
