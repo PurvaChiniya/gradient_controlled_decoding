@@ -44,6 +44,14 @@ def slugify(value):
     return re.sub(r"[^A-Za-z0-9._-]+", "-", value).strip("-").lower()
 
 
+def build_output_stem(dataset, scores_csv):
+    stem = slugify(scores_csv.stem)
+    dataset_prefix = f"{dataset}__"
+    if stem.startswith(dataset_prefix):
+        return stem
+    return f"{dataset}__{stem}"
+
+
 def build_ground_truth(dataset, df):
     if dataset in {"advbench", "security"}:
         return np.ones(len(df), dtype=int)
@@ -158,7 +166,7 @@ def main():
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    config_slug = f"{args.dataset}__{slugify(scores_csv.stem)}"
+    config_slug = build_output_stem(args.dataset, scores_csv)
     summary = {
         "dataset": args.dataset,
         "scores_csv": str(scores_csv),

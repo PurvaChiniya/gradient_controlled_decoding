@@ -133,21 +133,21 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
 
     if model is None or tokenizer is None:
         model, tokenizer = load_model(model_id)
-    sep_token, sep_token_id = tokenizer.unk_token, tokenizer.unk_token_id
-    prompt = (
-        f'<s>[INST] <<SYS>> {{system_prompt}} <</SYS>> {{content}} [/INST]' + 
-        f'{{sep_token}} {{summary}} {{eos_token}}'
-    )
     
-    def apply_prompt_template(sample):
-        txt = prompt.format(
+    def build_model_inputs(sample):
+        prefix_text = (
+            f'<s>[INST] <<SYS>> {{system_prompt}} <</SYS>> {{content}} [/INST]'
+        ).format(
             system_prompt='You are a helpful assistant. Help me with the following query: ',
             content=sample['source'],
-            summary=sample['target'],
-            eos_token=tokenizer.eos_token,
-            sep_token=sep_token,
         )
-        return {'text': txt}
+        target_text = f" {sample['target']} {tokenizer.eos_token}"
+        prefix_ids = tokenizer(prefix_text).input_ids
+        target_ids = tokenizer(target_text, add_special_tokens=False).input_ids
+        input_ids = torch.tensor(np.array([prefix_ids + target_ids]))
+        labels = input_ids.clone()
+        labels[:, :len(prefix_ids)] = -100
+        return input_ids, labels
 
     cos_all = []
     latency_seconds = []
@@ -156,14 +156,7 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
         start_time = time.perf_counter()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         basic_sample = {"source": row["prompt"], "target": response}
-        d = apply_prompt_template(basic_sample)
-        input_ids = tokenizer(d['text']).input_ids
-        sep = input_ids.index(sep_token_id)
-        
-        input_ids = input_ids[:sep] + input_ids[sep+1:]
-        input_ids = torch.tensor(np.array([input_ids]))
-        target_ids = input_ids.clone()
-        target_ids[:, :sep] = -100
+        input_ids, target_ids = build_model_inputs(basic_sample)
         optimizer.zero_grad()
         outputs = model(input_ids, labels=target_ids)
         neg_log_likelihood = outputs.loss
