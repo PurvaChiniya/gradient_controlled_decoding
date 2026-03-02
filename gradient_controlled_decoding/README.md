@@ -57,4 +57,17 @@ Example outputs:
 For controlled decoding run the model with the generated labels from detection model , using python controlled_decode.py
 
 ##Testing 
-For end-to-end testing run eval_one.py
+Run joint threshold evaluation on a detection output CSV with:
+`python eval.py --dataset advbench --scores-csv outputs/detection/advbench__meta-llama-llama-2-7b-chat-hf__scores.csv`
+
+Optional arguments:
+- `--num-thresholds` to control the size of the joint threshold sweep
+- `--output-dir` to choose where evaluation summaries are saved
+
+The evaluation script:
+- rebuilds ground-truth labels based on the selected dataset
+- searches over joint `sure` and `sorry` thresholds
+- reports the best threshold pair by max F1
+- saves a JSON summary with F1, precision, recall, false positives, attack success rate, and confusion-matrix percentages over the full dataset
+
+To evaluate the results reported from the paper pipeline, run this `eval.py` script on the detection output CSV for the dataset/model configuration you want to report.
