@@ -1,0 +1,38 @@
+{
+  "dataset": "advbench",
+  "model_id": "meta-llama/Llama-3.2-3B-Instruct",
+  "max_samples": null,
+  "outputs": {
+    "sure": {
+      "auprc": 1.0,
+      "f1": 0.9941972920696325
+    },
+    "sorry": {
+      "auprc": 1.0,
+      "f1": 0.9823874755381604
+    }
+  },
+  "latency": {
+    "sure": {
+      "num_samples": 520,
+      "total_seconds": 171.71956041599697,
+      "mean_ms": 330.22992387691727,
+      "p50_ms": 329.31173750057496,
+      "p95_ms": 334.7899867993874
+    },
+    "sorry": {
+      "num_samples": 520,
+      "total_seconds": 170.7460556160113,
+      "mean_ms": 328.35779926156016,
+      "p50_ms": 328.0515804999595,
+      "p95_ms": 330.92843005006216
+    },
+    "scoring_total": {
+      "num_samples": 1040,
+      "total_seconds": 342.46561603200826,
+      "mean_ms": 329.2938615692387,
+      "p50_ms": 328.67300949965284,
+      "p95_ms": 333.51770720146305
+    }
+  }
+}
