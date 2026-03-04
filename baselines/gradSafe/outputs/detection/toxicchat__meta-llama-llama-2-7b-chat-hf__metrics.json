@@ -1,0 +1,22 @@
+{
+  "dataset": "toxicchat",
+  "model_id": "meta-llama/Llama-2-7b-chat-hf",
+  "max_samples": 500,
+  "outputs": {
+    "sure": {
+      "auprc": 0.9121131715515668,
+      "precision": 0.9076923076923077,
+      "recall": 0.6483516483516484,
+      "f1": 0.7564102564102564
+    }
+  },
+  "latency": {
+    "sure": {
+      "num_samples": 500,
+      "total_seconds": 297.44372375004605,
+      "mean_ms": 594.8874475000921,
+      "p50_ms": 576.8205265012512,
+      "p95_ms": 698.6527950972231
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "dataset": "advbench",
+  "scores_csv": "baselines/gradSafe/outputs/detection/advbench__meta-llama-llama-2-7b-chat-hf__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": -0.109630375365606,
+      "max_f1": 1.0,
+      "precision_at_best": 1.0,
+      "recall_at_best": 1.0,
+      "auprc": 1.0
+    }
+  }
+}

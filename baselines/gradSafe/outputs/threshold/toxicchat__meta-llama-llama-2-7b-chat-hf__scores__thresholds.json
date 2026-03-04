@@ -1,0 +1,13 @@
+{
+  "dataset": "toxicchat",
+  "scores_csv": "baselines/gradSafe/outputs/detection/toxicchat__meta-llama-llama-2-7b-chat-hf__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.1001741832859641,
+      "max_f1": 0.8351063829787234,
+      "precision_at_best": 0.8092783505154639,
+      "recall_at_best": 0.8626373626373627,
+      "auprc": 0.9121131715515668
+    }
+  }
+}

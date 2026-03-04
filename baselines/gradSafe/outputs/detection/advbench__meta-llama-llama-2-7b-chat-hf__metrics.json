@@ -1,0 +1,22 @@
+{
+  "dataset": "advbench",
+  "model_id": "meta-llama/Llama-2-7b-chat-hf",
+  "max_samples": null,
+  "outputs": {
+    "sure": {
+      "auprc": 1.0,
+      "precision": 1.0,
+      "recall": 0.9923076923076923,
+      "f1": 0.9961389961389961
+    }
+  },
+  "latency": {
+    "sure": {
+      "num_samples": 520,
+      "total_seconds": 296.9902962191336,
+      "mean_ms": 571.1351850367954,
+      "p50_ms": 575.8406864988501,
+      "p95_ms": 592.2529256487906
+    }
+  }
+}

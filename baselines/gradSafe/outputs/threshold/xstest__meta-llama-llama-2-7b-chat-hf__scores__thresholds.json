@@ -1,0 +1,13 @@
+{
+  "dataset": "xstest",
+  "scores_csv": "baselines/gradSafe/outputs/detection/xstest__meta-llama-llama-2-7b-chat-hf__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.2845930363015888,
+      "max_f1": 0.9141414141414141,
+      "precision_at_best": 0.923469387755102,
+      "recall_at_best": 0.905,
+      "auprc": 0.9359697967536063
+    }
+  }
+}

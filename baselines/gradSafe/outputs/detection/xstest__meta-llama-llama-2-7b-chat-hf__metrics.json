@@ -1,0 +1,22 @@
+{
+  "dataset": "xstest",
+  "model_id": "meta-llama/Llama-2-7b-chat-hf",
+  "max_samples": null,
+  "outputs": {
+    "sure": {
+      "auprc": 0.9359697967536063,
+      "precision": 0.8558558558558559,
+      "recall": 0.95,
+      "f1": 0.9004739336492891
+    }
+  },
+  "latency": {
+    "sure": {
+      "num_samples": 450,
+      "total_seconds": 257.040966048,
+      "mean_ms": 571.2021467733333,
+      "p50_ms": 573.5418975018547,
+      "p95_ms": 590.0580250981875
+    }
+  }
+}
