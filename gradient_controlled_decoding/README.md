@@ -53,8 +53,41 @@ Example outputs:
 - `outputs/threshold/advbench__advbench__meta-llama-llama-2-7b-chat-hf__sure__threshold_sweep.png`
 - `outputs/threshold/advbench__advbench__meta-llama-llama-2-7b-chat-hf__sure__pr_curve.png`
 
-##Controlled Decoding 
-For controlled decoding run the model with the generated labels from detection model , using python controlled_decode.py
+##Controlled Decoding
+Run controlled decoding from the saved detection scores and joint thresholds with:
+`python controlled_decode.py --model-id meta-llama/Llama-2-7b-chat-hf --dataset advbench`
+
+Optional arguments:
+- `--output-dir` to choose where generation CSVs are saved
+- `--max-new-tokens` to control generation length
+- `--temperature` and `--top-p` to control sampling
+- `--max-samples` to cap the number of rows generated
+- `--system-prompt` to add a system prompt. By default no system prompt is added.
+
+The controlled decoding script:
+- reads the saved detection CSV from `outputs/detection`
+- reads the best joint `sure` and `sorry` thresholds from `outputs/eval`
+- rebuilds the binary generation label from those thresholds
+- generates one response per prompt
+- saves one generations CSV per dataset/model configuration
+
+Example output:
+- `outputs/generations/advbench__meta-llama-llama-2-7b-chat-hf__generations.csv`
+
+To run generation for all datasets for one model, use:
+`./scripts/run_generation_pipeline.sh`
+
+To run generation for a different model, pass the model ID:
+`./scripts/run_generation_pipeline.sh meta-llama/Llama-3.2-3B-Instruct`
+
+The generation pipeline uses:
+- `advbench`
+- `xstest`
+- `security` if `security_data.csv` exists
+- `toxicchat` with `--max-samples 500` by default
+
+You can override the toxicchat cap when using the script:
+`TOXICCHAT_MAX_SAMPLES=200 ./scripts/run_generation_pipeline.sh`
 
 ##Testing 
 Run joint threshold evaluation on a detection output CSV with:
