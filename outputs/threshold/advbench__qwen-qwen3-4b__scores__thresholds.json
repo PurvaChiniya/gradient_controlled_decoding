@@ -1,0 +1,20 @@
+{
+  "dataset": "advbench",
+  "scores_csv": "outputs/detection/advbench__qwen-qwen3-4b__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.0469640912200545,
+      "max_f1": 1.0,
+      "precision_at_best": 1.0,
+      "recall_at_best": 1.0,
+      "auprc": 1.0
+    },
+    "sorry": {
+      "best_threshold": -0.1415108397599688,
+      "max_f1": 1.0,
+      "precision_at_best": 1.0,
+      "recall_at_best": 1.0,
+      "auprc": 1.0
+    }
+  }
+}

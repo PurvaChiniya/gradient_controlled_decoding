@@ -1,0 +1,20 @@
+{
+  "dataset": "toxicchat",
+  "scores_csv": "outputs/detection/toxicchat__qwen-qwen3-8b__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.0836056792470406,
+      "max_f1": 0.7236180904522612,
+      "precision_at_best": 0.6666666666666666,
+      "recall_at_best": 0.7912087912087912,
+      "auprc": 0.773782669696652
+    },
+    "sorry": {
+      "best_threshold": 0.0775301101752564,
+      "max_f1": 0.6783369803063457,
+      "precision_at_best": 0.5636363636363636,
+      "recall_at_best": 0.8516483516483516,
+      "auprc": 0.7321683081766039
+    }
+  }
+}

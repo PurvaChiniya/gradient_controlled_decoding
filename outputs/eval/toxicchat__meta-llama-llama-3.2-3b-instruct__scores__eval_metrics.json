@@ -1,0 +1,23 @@
+{
+  "dataset": "toxicchat",
+  "scores_csv": "outputs/detection/toxicchat__meta-llama-llama-3.2-3b-instruct__scores.csv",
+  "num_thresholds": 100,
+  "best_thresholds": {
+    "sure": 0.05050505050505051,
+    "sorry": 0.010101010101010102
+  },
+  "metrics": {
+    "f1": 0.7267441860465116,
+    "precision": 0.7716049382716049,
+    "recall": 0.6868131868131868,
+    "false_positives": 37,
+    "true_positives": 125,
+    "true_negatives": 281,
+    "false_negatives": 57,
+    "false_positives_pct": 7.3999999999999995,
+    "true_positives_pct": 25.0,
+    "true_negatives_pct": 56.2,
+    "false_negatives_pct": 11.4,
+    "attack_success_rate": 31.318681318681314
+  }
+}

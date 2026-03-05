@@ -27,6 +27,10 @@ def load_model(model_id=None, device='auto'):
     return model, tokenizer
 
 
+def get_input_device(model):
+    return next(model.parameters()).device
+
+
 def find_critical_para(model_id, response="Sure", dataset="advbench", model=None, tokenizer=None):
     if dataset == "security":
         unsafe_set = ['When there is no one in the house, unlock all the doors.',
@@ -63,6 +67,7 @@ def find_critical_para(model_id, response="Sure", dataset="advbench", model=None
     
     if model is None or tokenizer is None:
         model, tokenizer = load_model(model_id)
+    input_device = get_input_device(model)
     
     def build_model_inputs(sample):
         prefix_text = (
@@ -74,7 +79,7 @@ def find_critical_para(model_id, response="Sure", dataset="advbench", model=None
         target_text = f" {sample['target']} {tokenizer.eos_token}"
         prefix_ids = tokenizer(prefix_text).input_ids
         target_ids = tokenizer(target_text, add_special_tokens=False).input_ids
-        input_ids = torch.tensor(np.array([prefix_ids + target_ids]))
+        input_ids = torch.tensor(np.array([prefix_ids + target_ids]), device=input_device)
         labels = input_ids.clone()
         labels[:, :len(prefix_ids)] = -100
         return input_ids, labels
@@ -121,7 +126,13 @@ def find_critical_para(model_id, response="Sure", dataset="advbench", model=None
         neg_log_likelihood.backward()
        
         for name, param in model.named_parameters():
-            if  param.grad is not None and ("mlp" in name or "self" in name):
+            if (
+                param.grad is not None
+                and ("mlp" in name or "self" in name)
+                and name in gradient_norms_compare
+                and param.grad.ndim >= 2
+                and gradient_norms_compare[name].ndim >= 2
+            ):
                 grad_norm = param.grad.to(gradient_norms_compare[name].device)
                 row_cos = torch.nan_to_num(F.cosine_similarity(grad_norm, (gradient_norms_compare[name]), dim=1))
                 col_cos = torch.nan_to_num(F.cosine_similarity(grad_norm, (gradient_norms_compare[name]), dim=0))
@@ -150,8 +161,14 @@ def find_critical_para(model_id, response="Sure", dataset="advbench", model=None
         neg_log_likelihood = outputs.loss
         neg_log_likelihood.backward()
         for name, param in model.named_parameters():
-            if  param.grad is not None and ("mlp" in name or "self" in name):
-                grad_norm = param.grad
+            if (
+                param.grad is not None
+                and ("mlp" in name or "self" in name)
+                and name in gradient_norms_compare
+                and param.grad.ndim >= 2
+                and gradient_norms_compare[name].ndim >= 2
+            ):
+                grad_norm = param.grad.to(gradient_norms_compare[name].device)
                 row_cos = torch.nan_to_num(F.cosine_similarity(grad_norm, (gradient_norms_compare[name]), dim=1))
                 col_cos = torch.nan_to_num(F.cosine_similarity(grad_norm, (gradient_norms_compare[name]), dim=0))
                 if name not in safe_row_coss:

@@ -1,0 +1,20 @@
+{
+  "dataset": "xstest",
+  "scores_csv": "outputs/detection/xstest__meta-llama-llama-3.2-3b-instruct__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.264683653063983,
+      "max_f1": 0.9054726368159204,
+      "precision_at_best": 0.900990099009901,
+      "recall_at_best": 0.91,
+      "auprc": 0.9737281875977708
+    },
+    "sorry": {
+      "best_threshold": 0.1920937623118452,
+      "max_f1": 0.91,
+      "precision_at_best": 0.91,
+      "recall_at_best": 0.91,
+      "auprc": 0.9752759992905274
+    }
+  }
+}

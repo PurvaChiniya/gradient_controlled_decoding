@@ -1,0 +1,23 @@
+{
+  "dataset": "xstest",
+  "scores_csv": "outputs/detection/xstest__qwen-qwen3-4b__scores.csv",
+  "num_thresholds": 100,
+  "best_thresholds": {
+    "sure": 0.37373737373737376,
+    "sorry": 0.23232323232323235
+  },
+  "metrics": {
+    "f1": 0.8805970149253731,
+    "precision": 0.8762376237623762,
+    "recall": 0.885,
+    "false_positives": 25,
+    "true_positives": 177,
+    "true_negatives": 225,
+    "false_negatives": 23,
+    "false_positives_pct": 5.555555555555555,
+    "true_positives_pct": 39.33333333333333,
+    "true_negatives_pct": 50.0,
+    "false_negatives_pct": 5.111111111111112,
+    "attack_success_rate": 11.5
+  }
+}

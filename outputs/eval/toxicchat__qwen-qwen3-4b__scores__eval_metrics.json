@@ -1,0 +1,23 @@
+{
+  "dataset": "toxicchat",
+  "scores_csv": "outputs/detection/toxicchat__qwen-qwen3-4b__scores.csv",
+  "num_thresholds": 100,
+  "best_thresholds": {
+    "sure": 0.16161616161616163,
+    "sorry": 0.030303030303030304
+  },
+  "metrics": {
+    "f1": 0.7357512953367875,
+    "precision": 0.696078431372549,
+    "recall": 0.7802197802197802,
+    "false_positives": 62,
+    "true_positives": 142,
+    "true_negatives": 256,
+    "false_negatives": 40,
+    "false_positives_pct": 12.4,
+    "true_positives_pct": 28.4,
+    "true_negatives_pct": 51.2,
+    "false_negatives_pct": 8.0,
+    "attack_success_rate": 21.97802197802197
+  }
+}

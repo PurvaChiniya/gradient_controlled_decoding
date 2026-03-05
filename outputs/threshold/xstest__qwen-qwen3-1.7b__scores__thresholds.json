@@ -1,0 +1,20 @@
+{
+  "dataset": "xstest",
+  "scores_csv": "outputs/detection/xstest__qwen-qwen3-1.7b__scores.csv",
+  "outputs": {
+    "sure": {
+      "best_threshold": 0.2210017522566877,
+      "max_f1": 0.8106796116504854,
+      "precision_at_best": 0.7877358490566038,
+      "recall_at_best": 0.835,
+      "auprc": 0.8863479625932128
+    },
+    "sorry": {
+      "best_threshold": -0.0104469029731999,
+      "max_f1": 0.8218527315914489,
+      "precision_at_best": 0.7828054298642534,
+      "recall_at_best": 0.865,
+      "auprc": 0.891013633716341
+    }
+  }
+}

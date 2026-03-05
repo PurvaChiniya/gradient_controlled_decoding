@@ -108,6 +108,10 @@ def synchronize_if_needed():
         torch.cuda.synchronize()
 
 
+def get_input_device(model):
+    return next(model.parameters()).device
+
+
 def summarize_latency(latency_seconds):
     latency_ms = np.array(latency_seconds, dtype=float) * 1000.0
     if latency_ms.size == 0:
@@ -133,6 +137,7 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
 
     if model is None or tokenizer is None:
         model, tokenizer = load_model(model_id)
+    input_device = get_input_device(model)
     
     def build_model_inputs(sample):
         prefix_text = (
@@ -144,7 +149,7 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
         target_text = f" {sample['target']} {tokenizer.eos_token}"
         prefix_ids = tokenizer(prefix_text).input_ids
         target_ids = tokenizer(target_text, add_special_tokens=False).input_ids
-        input_ids = torch.tensor(np.array([prefix_ids + target_ids]))
+        input_ids = torch.tensor(np.array([prefix_ids + target_ids]), device=input_device)
         labels = input_ids.clone()
         labels[:, :len(prefix_ids)] = -100
         return input_ids, labels
@@ -164,7 +169,15 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
         
         cos = []
         for name, param in model.named_parameters():
-            if param.grad is not None and ("mlp" in name or "self" in name):
+            if (
+                param.grad is not None
+                and ("mlp" in name or "self" in name)
+                and name in gradient_norms_compare
+                and name in minus_row
+                and name in minus_col
+                and param.grad.ndim >= 2
+                and gradient_norms_compare[name].ndim >= 2
+            ):
                 grad_norm = param.grad.to(gradient_norms_compare[name].device)
                 row_cos = torch.nan_to_num(F.cosine_similarity(grad_norm, gradient_norms_compare[name], dim=1))
                 col_cos = torch.nan_to_num(F.cosine_similarity(grad_norm, gradient_norms_compare[name], dim=0))
@@ -177,7 +190,7 @@ def cos_sim(model_id, df, gradient_norms_compare, minus_row, minus_col, response
         latency_seconds.append(time.perf_counter() - start_time)
         cos_all.append(cos)
         
-    cos_all = [sum(feature) / len(feature) for feature in cos_all]
+    cos_all = [sum(feature) / len(feature) if feature else 0.0 for feature in cos_all]
     
     precision, recall, thresholds = precision_recall_curve(label_all, cos_all)
     auprc = auc(recall, precision)

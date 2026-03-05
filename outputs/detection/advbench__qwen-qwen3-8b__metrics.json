@@ -1,0 +1,38 @@
+{
+  "dataset": "advbench",
+  "model_id": "Qwen/Qwen3-8B",
+  "max_samples": null,
+  "outputs": {
+    "sure": {
+      "auprc": 1.0,
+      "f1": 0.9733464955577492
+    },
+    "sorry": {
+      "auprc": 1.0,
+      "f1": 0.9941972920696325
+    }
+  },
+  "latency": {
+    "sure": {
+      "num_samples": 520,
+      "total_seconds": 328.2344257950317,
+      "mean_ms": 631.2200496058302,
+      "p50_ms": 629.6494939888362,
+      "p95_ms": 636.1537765988032
+    },
+    "sorry": {
+      "num_samples": 520,
+      "total_seconds": 331.704368073988,
+      "mean_ms": 637.8930155269001,
+      "p50_ms": 637.4845570026082,
+      "p95_ms": 640.0227419573639
+    },
+    "scoring_total": {
+      "num_samples": 1040,
+      "total_seconds": 659.9387938690197,
+      "mean_ms": 634.5565325663651,
+      "p50_ms": 636.5361755015329,
+      "p95_ms": 639.4862705419655
+    }
+  }
+}
