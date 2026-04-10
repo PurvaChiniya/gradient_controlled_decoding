@@ -1,4 +1,4 @@
-# Gradient Controlled Decoding Experiments
+# Gradient Controlled Decoding Experiments [https://arxiv.org/abs/2604.05179]
 
 This repository contains:
 - `gradient_controlled_decoding/`: gradient-based controlled decoding experiments.
